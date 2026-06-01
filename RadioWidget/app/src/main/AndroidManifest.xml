@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="de.radiowidget">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <!-- Needed to request battery optimization exemption -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.RadioWidget">
+
+        <!-- One-time battery optimization dialog -->
+        <activity
+            android:name=".BatteryOptimizationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.RadioWidget.Transparent"/>
+
+        <!-- Station Manager Activity -->
+        <activity
+            android:name=".StationManagerActivity"
+            android:exported="false"
+            android:label="Sender verwalten"
+            android:theme="@style/Theme.RadioWidget.Manager"/>
+
+        <!-- AppWidget Provider -->
+        <receiver
+            android:name=".RadioWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+                <action android:name="de.radiowidget.ACTION_PLAY"/>
+                <action android:name="de.radiowidget.ACTION_STOP"/>
+                <action android:name="de.radiowidget.ACTION_NEXT"/>
+                <action android:name="de.radiowidget.ACTION_PREV"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/radio_widget_info"/>
+        </receiver>
+
+        <!-- Foreground Service for streaming -->
+        <service
+            android:name=".RadioService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback"
+            android:stopWithTask="false"/>
+
+    </application>
+
+</manifest>

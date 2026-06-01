@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.RadioWidget" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">#1A1A1A</item>
+        <item name="colorPrimaryDark">#0F0F0F</item>
+        <item name="colorAccent">#E8FF5A</item>
+    </style>
+
+    <!-- Manager: keep ActionBar so system insets are handled automatically -->
+    <style name="Theme.RadioWidget.Manager" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">#1A1A1A</item>
+        <item name="colorPrimaryDark">#0F0F0F</item>
+        <item name="colorAccent">#E8FF5A</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">#0F0F0F</item>
+    </style>
+    <!-- Transparent theme for battery dialog trampoline -->
+    <style name="Theme.RadioWidget.Transparent" parent="Theme.AppCompat.Dialog">
+        <item name="colorPrimary">#1A1A1A</item>
+        <item name="colorAccent">#E8FF5A</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+
+</resources>
