@@ -1,0 +1,765 @@
+diff --git a/RadioWidget/app/build.gradle.kts b/RadioWidget/app/build.gradle.kts
+index b2fd029..22d93c0 100644
+--- a/RadioWidget/app/build.gradle.kts
++++ b/RadioWidget/app/build.gradle.kts
+@@ -32,5 +32,7 @@ dependencies {
+     implementation(libs.androidx.appcompat)
+     implementation(libs.androidx.media)
+     implementation(libs.androidx.recyclerview)
++    // FIX: provides lifecycleScope — replaces manual CoroutineScope in StationManagerActivity
++    implementation(libs.androidx.lifecycle.runtime)
+     implementation(libs.kotlinx.coroutines)
+ }
+diff --git a/RadioWidget/app/src/main/AndroidManifest.xml b/RadioWidget/app/src/main/AndroidManifest.xml
+index 3b85947..d4558f7 100644
+--- a/RadioWidget/app/src/main/AndroidManifest.xml
++++ b/RadioWidget/app/src/main/AndroidManifest.xml
+@@ -41,6 +41,9 @@
+                 <action android:name="de.radiowidget.ACTION_STOP"/>
+                 <action android:name="de.radiowidget.ACTION_NEXT"/>
+                 <action android:name="de.radiowidget.ACTION_PREV"/>
++                <!-- FIX: were missing — required for page navigation from the widget -->
++                <action android:name="de.radiowidget.ACTION_PAGE_NEXT"/>
++                <action android:name="de.radiowidget.ACTION_PAGE_PREV"/>
+             </intent-filter>
+             <meta-data
+                 android:name="android.appwidget.provider"
+diff --git a/RadioWidget/app/src/main/java/de/radiowidget/RadioBrowserApi.kt b/RadioWidget/app/src/main/java/de/radiowidget/RadioBrowserApi.kt
+index 42eb611..5d4d9c9 100644
+--- a/RadioWidget/app/src/main/java/de/radiowidget/RadioBrowserApi.kt
++++ b/RadioWidget/app/src/main/java/de/radiowidget/RadioBrowserApi.kt
+@@ -15,48 +15,47 @@ data class SearchResult(
+ 
+ object RadioBrowserApi {
+ 
+-    // radio-browser.info provides a round-robin DNS – same backend Plasma uses
+-    private const val BASE = "https://de1.api.radio-browser.info/json"
++    // FIX: use the genuine round-robin endpoint — de1.api... was a single hardcoded node
++    private const val BASE = "https://all.api.radio-browser.info/json"
+ 
+     /** Search by station name, returns up to [limit] results */
+     fun searchByName(query: String, limit: Int = 30): List<SearchResult> {
+         val encoded = java.net.URLEncoder.encode(query, "UTF-8")
+-        val url = "$BASE/stations/search?name=$encoded&limit=$limit&order=votes&reverse=true&hidebroken=true"
+-        return fetch(url)
++        return fetch("$BASE/stations/search?name=$encoded&limit=$limit&order=votes&reverse=true&hidebroken=true")
+     }
+ 
+     /** Search by tag/genre */
+     fun searchByTag(tag: String, limit: Int = 30): List<SearchResult> {
+         val encoded = java.net.URLEncoder.encode(tag, "UTF-8")
+-        val url = "$BASE/stations/search?tag=$encoded&limit=$limit&order=votes&reverse=true&hidebroken=true"
+-        return fetch(url)
++        return fetch("$BASE/stations/search?tag=$encoded&limit=$limit&order=votes&reverse=true&hidebroken=true")
+     }
+ 
+     private fun fetch(urlStr: String): List<SearchResult> {
+-        val conn = URL(urlStr).openConnection() as HttpURLConnection
+-        conn.apply {
++        val conn = (URL(urlStr).openConnection() as HttpURLConnection).apply {
+             requestMethod = "GET"
+             setRequestProperty("User-Agent", "RadioWidget/1.0")
+             connectTimeout = 5000
+-            readTimeout = 8000
++            readTimeout    = 8000
+         }
+-        val body = conn.inputStream.bufferedReader().readText()
+-        conn.disconnect()
+-        val arr = JSONArray(body)
+-        return (0 until arr.length()).mapNotNull { i ->
+-            val obj = arr.getJSONObject(i)
+-            val url = obj.optString("url_resolved").ifBlank {
+-                obj.optString("url")
++        // FIX: try-finally guarantees disconnect() even when an exception is thrown
++        return try {
++            val body = conn.inputStream.bufferedReader().readText()
++            val arr  = JSONArray(body)
++            (0 until arr.length()).mapNotNull { i ->
++                val obj = arr.getJSONObject(i)
++                val url = obj.optString("url_resolved").ifBlank { obj.optString("url") }
++                if (url.isBlank()) return@mapNotNull null
++                SearchResult(
++                    name      = obj.optString("name", "Unbekannt").trim(),
++                    genre     = obj.optString("tags", "").split(",").firstOrNull()?.trim() ?: "",
++                    country   = obj.optString("country", ""),
++                    bitrate   = obj.optInt("bitrate", 0),
++                    streamUrl = url,
++                    codec     = obj.optString("codec", "")
++                )
+             }
+-            if (url.isBlank()) return@mapNotNull null
+-            SearchResult(
+-                name      = obj.optString("name", "Unbekannt").trim(),
+-                genre     = obj.optString("tags", "").split(",").firstOrNull()?.trim() ?: "",
+-                country   = obj.optString("country", ""),
+-                bitrate   = obj.optInt("bitrate", 0),
+-                streamUrl = url,
+-                codec     = obj.optString("codec", "")
+-            )
++        } finally {
++            conn.disconnect()
+         }
+     }
+ }
+diff --git a/RadioWidget/app/src/main/java/de/radiowidget/RadioService.kt b/RadioWidget/app/src/main/java/de/radiowidget/RadioService.kt
+index 2e4c990..adc1a90 100644
+--- a/RadioWidget/app/src/main/java/de/radiowidget/RadioService.kt
++++ b/RadioWidget/app/src/main/java/de/radiowidget/RadioService.kt
+@@ -3,7 +3,6 @@ package de.radiowidget
+ import android.app.Notification
+ import android.app.NotificationChannel
+ import android.app.NotificationManager
+-import android.app.PendingIntent
+ import android.content.BroadcastReceiver
+ import android.content.Context
+ import android.content.Intent
+@@ -13,6 +12,7 @@ import android.media.AudioFocusRequest
+ import android.media.AudioManager
+ import android.media.MediaPlayer
+ import android.net.wifi.WifiManager
++import android.os.Build
+ import android.os.Handler
+ import android.os.IBinder
+ import android.os.Looper
+@@ -23,11 +23,10 @@ import androidx.core.app.NotificationCompat
+ class RadioService : Service() {
+ 
+     companion object {
+-        const val CHANNEL_ID      = "radio_channel"
+-        const val NOTIFICATION_ID = 1
+-        const val RETRY_DELAY_MS  = 5_000L
+-        const val MAX_RETRIES     = 10
+-        // Watchdog: check every 30s if stream is still alive
++        const val CHANNEL_ID           = "radio_channel"
++        const val NOTIFICATION_ID      = 1
++        const val RETRY_DELAY_MS       = 5_000L
++        const val MAX_RETRIES          = 10
+         const val WATCHDOG_INTERVAL_MS = 30_000L
+     }
+ 
+@@ -35,6 +34,8 @@ class RadioService : Service() {
+     private var currentStationIdx = 0
+     private var isPlaying = false
+     private var retryCount = 0
++    // FIX: tracks intentional pause from audio focus loss — prevents watchdog false-restart
++    private var isPausedForFocus = false
+ 
+     private lateinit var wakeLock: PowerManager.WakeLock
+     private lateinit var wifiLock: WifiManager.WifiLock
+@@ -43,7 +44,6 @@ class RadioService : Service() {
+ 
+     private val handler = Handler(Looper.getMainLooper())
+ 
+-    // Retry runnable
+     private val retryRunnable = Runnable {
+         if (retryCount < MAX_RETRIES) {
+             retryCount++
+@@ -57,14 +57,13 @@ class RadioService : Service() {
+         }
+     }
+ 
+-    // Watchdog: Samsung can freeze MediaPlayer without firing onError/onCompletion
+     private val watchdogRunnable = object : Runnable {
+         override fun run() {
+             val mp = mediaPlayer
+             if (isPlaying) {
+                 val alive = try { mp != null && mp.isPlaying } catch (e: Exception) { false }
+-                if (!alive && retryCount == 0) {
+-                    // Stream silently died — restart immediately
++                // FIX: isPausedForFocus guard — watchdog no longer restarts an intentional pause
++                if (!alive && retryCount == 0 && !isPausedForFocus) {
+                     retryCount = 1
+                     val stations = StationRepository.getAllVisible(this@RadioService)
+                     startStream(stations[currentStationIdx.coerceIn(0, stations.size - 1)])
+@@ -74,10 +73,10 @@ class RadioService : Service() {
+         }
+     }
+ 
+-    // SCREEN_ON receiver: resume immediately when screen turns on
+     private val screenOnReceiver = object : BroadcastReceiver() {
+         override fun onReceive(context: Context, intent: Intent) {
+-            if (intent.action == Intent.ACTION_SCREEN_ON && isPlaying) {
++            // FIX: also check isPausedForFocus to avoid restarting a focus-paused stream
++            if (intent.action == Intent.ACTION_SCREEN_ON && isPlaying && !isPausedForFocus) {
+                 val mp = mediaPlayer
+                 val alive = try { mp != null && mp.isPlaying } catch (e: Exception) { false }
+                 if (!alive) {
+@@ -117,15 +116,40 @@ class RadioService : Service() {
+             )
+             .setOnAudioFocusChangeListener { focusChange ->
+                 when (focusChange) {
+-                    AudioManager.AUDIOFOCUS_LOSS            -> stopRadio()
+-                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT  -> mediaPlayer?.pause()
+-                    AudioManager.AUDIOFOCUS_GAIN            -> mediaPlayer?.start()
++                    AudioManager.AUDIOFOCUS_LOSS -> stopRadio()
++
++                    // FIX: set flag so watchdog and screenOnReceiver don't restart the paused stream
++                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
++                        mediaPlayer?.pause()
++                        isPausedForFocus = true
++                        saveState(currentStationIdx, playing = false)
++                        RadioWidgetProvider.updateAllWidgets(this)
++                    }
++
++                    // FIX: only resume if we were the ones who paused for focus
++                    AudioManager.AUDIOFOCUS_GAIN -> {
++                        if (isPausedForFocus) {
++                            mediaPlayer?.start()
++                            isPausedForFocus = false
++                            saveState(currentStationIdx, playing = true)
++                            RadioWidgetProvider.updateAllWidgets(this)
++                        }
++                    }
+                 }
+             }
+             .build()
+ 
+-        // Register SCREEN_ON receiver
+-        registerReceiver(screenOnReceiver, IntentFilter(Intent.ACTION_SCREEN_ON))
++        // FIX: pass RECEIVER_NOT_EXPORTED on API 33+ — avoids SecurityException on API 34 targets
++        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
++            registerReceiver(
++                screenOnReceiver,
++                IntentFilter(Intent.ACTION_SCREEN_ON),
++                RECEIVER_NOT_EXPORTED
++            )
++        } else {
++            @Suppress("UnspecifiedRegisterReceiverFlag")
++            registerReceiver(screenOnReceiver, IntentFilter(Intent.ACTION_SCREEN_ON))
++        }
+     }
+ 
+     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+@@ -138,7 +162,6 @@ class RadioService : Service() {
+             RadioWidgetProvider.ACTION_STOP -> { stopRadio(); stopSelf() }
+             RadioWidgetProvider.ACTION_NEXT -> playStation((currentStationIdx + 1) % stations.size)
+             RadioWidgetProvider.ACTION_PREV -> playStation((currentStationIdx - 1 + stations.size) % stations.size)
+-            // Called when service is restarted by system after being killed
+             null -> {
+                 val prefs = getSharedPreferences("radio_prefs", MODE_PRIVATE)
+                 if (prefs.getBoolean("is_playing", false)) {
+@@ -151,6 +174,7 @@ class RadioService : Service() {
+ 
+     private fun playStation(idx: Int) {
+         retryCount = 0
++        isPausedForFocus = false
+         handler.removeCallbacks(retryRunnable)
+         handler.removeCallbacks(watchdogRunnable)
+ 
+@@ -195,44 +219,36 @@ class RadioService : Service() {
+                 retryCount = 0
+                 saveState(currentStationIdx, playing = true)
+                 RadioWidgetProvider.updateAllWidgets(this@RadioService)
+-                // Start watchdog after stream is confirmed running
+                 handler.postDelayed(watchdogRunnable, WATCHDOG_INTERVAL_MS)
+             }
+ 
+-            setOnErrorListener { _, _, _ ->
+-                handler.removeCallbacks(watchdogRunnable)
+-                if (retryCount < MAX_RETRIES) {
+-                    handler.postDelayed(retryRunnable, RETRY_DELAY_MS)
+-                } else {
+-                    this@RadioService.isPlaying = false
+-                    saveState(currentStationIdx, playing = false)
+-                    RadioWidgetProvider.updateAllWidgets(this@RadioService)
+-                    releaseLocks()
+-                }
+-                true
+-            }
+-
+-            setOnCompletionListener {
+-                handler.removeCallbacks(watchdogRunnable)
+-                if (retryCount < MAX_RETRIES) {
+-                    handler.postDelayed(retryRunnable, RETRY_DELAY_MS)
+-                } else {
+-                    this@RadioService.isPlaying = false
+-                    saveState(currentStationIdx, playing = false)
+-                    RadioWidgetProvider.updateAllWidgets(this@RadioService)
+-                    releaseLocks()
+-                }
+-            }
++            // FIX: both error and completion now delegate to shared handleStreamEnd()
++            setOnErrorListener { _, _, _ -> handleStreamEnd(); true }
++            setOnCompletionListener { handleStreamEnd() }
+ 
+             prepareAsync()
+         }
+     }
+ 
++    // FIX: extracted from duplicate blocks in setOnErrorListener and setOnCompletionListener
++    private fun handleStreamEnd() {
++        handler.removeCallbacks(watchdogRunnable)
++        if (retryCount < MAX_RETRIES) {
++            handler.postDelayed(retryRunnable, RETRY_DELAY_MS)
++        } else {
++            isPlaying = false
++            saveState(currentStationIdx, playing = false)
++            RadioWidgetProvider.updateAllWidgets(this)
++            releaseLocks()
++        }
++    }
++
+     private fun stopRadio() {
+         handler.removeCallbacks(retryRunnable)
+         handler.removeCallbacks(watchdogRunnable)
+         releasePlayer()
+         isPlaying = false
++        isPausedForFocus = false
+         saveState(currentStationIdx, playing = false)
+         audioManager.abandonAudioFocusRequest(audioFocusRequest)
+         releaseLocks()
+@@ -263,26 +279,28 @@ class RadioService : Service() {
+     }
+ 
+     private fun buildNotification(station: RadioStation): Notification {
+-        fun broadcast(action: String, req: Int) = PendingIntent.getBroadcast(
+-            this, req,
+-            Intent(this, RadioWidgetProvider::class.java).apply { this.action = action },
+-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+-        )
++        // FIX: uses RadioWidgetProvider.broadcast() — local duplicate helper removed
+         return NotificationCompat.Builder(this, CHANNEL_ID)
+             .setSmallIcon(android.R.drawable.ic_media_play)
+             .setContentTitle(station.name)
+             .setContentText("${station.genre} · ${station.frequency}")
+             .setOngoing(true)
+             .setSilent(true)
+-            .addAction(android.R.drawable.ic_media_previous, "Zurück",  broadcast(RadioWidgetProvider.ACTION_PREV, 2))
+-            .addAction(android.R.drawable.ic_media_pause,    "Stop",    broadcast(RadioWidgetProvider.ACTION_STOP, 0))
+-            .addAction(android.R.drawable.ic_media_next,     "Weiter",  broadcast(RadioWidgetProvider.ACTION_NEXT, 1))
+-            .setStyle(androidx.media.app.NotificationCompat.MediaStyle().setShowActionsInCompactView(0, 1, 2))
++            .addAction(android.R.drawable.ic_media_previous, "Zurück",
++                RadioWidgetProvider.broadcast(this, RadioWidgetProvider.ACTION_PREV, 0, 2))
++            .addAction(android.R.drawable.ic_media_pause, "Stop",
++                RadioWidgetProvider.broadcast(this, RadioWidgetProvider.ACTION_STOP, 0, 0))
++            .addAction(android.R.drawable.ic_media_next, "Weiter",
++                RadioWidgetProvider.broadcast(this, RadioWidgetProvider.ACTION_NEXT, 0, 1))
++            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
++                .setShowActionsInCompactView(0, 1, 2))
+             .build()
+     }
+ 
+     private fun createNotificationChannel() {
+-        val channel = NotificationChannel(CHANNEL_ID, "Radio Widget", NotificationManager.IMPORTANCE_LOW).apply {
++        val channel = NotificationChannel(
++            CHANNEL_ID, "Radio Widget", NotificationManager.IMPORTANCE_LOW
++        ).apply {
+             description = "Streaming Radio Wiedergabe"
+             setSound(null, null)
+         }
+diff --git a/RadioWidget/app/src/main/java/de/radiowidget/RadioWidgetProvider.kt b/RadioWidget/app/src/main/java/de/radiowidget/RadioWidgetProvider.kt
+index ed68416..95cbaae 100644
+--- a/RadioWidget/app/src/main/java/de/radiowidget/RadioWidgetProvider.kt
++++ b/RadioWidget/app/src/main/java/de/radiowidget/RadioWidgetProvider.kt
+@@ -25,10 +25,99 @@ class RadioWidgetProvider : AppWidgetProvider() {
+             R.id.btn_s0, R.id.btn_s1, R.id.btn_s2, R.id.btn_s3, R.id.btn_s4
+         )
+ 
++        // FIX: logic extracted to companion — no throwaway RadioWidgetProvider() instance needed
+         fun updateAllWidgets(context: Context) {
+             val mgr  = AppWidgetManager.getInstance(context)
+             val comp = ComponentName(context, RadioWidgetProvider::class.java)
+-            RadioWidgetProvider().onUpdate(context, mgr, mgr.getAppWidgetIds(comp))
++            mgr.getAppWidgetIds(comp).forEach { updateWidget(context, mgr, it) }
++        }
++
++        // FIX: shared helper — was duplicated in onReceive() and updateWidget()
++        fun maxPage(stationCount: Int): Int =
++            if (stationCount == 0) 0 else (stationCount - 1) / PAGE_SIZE
++
++        // FIX: moved to companion — now reusable by RadioService.buildNotification()
++        fun broadcast(context: Context, action: String, stationIdx: Int, reqCode: Int): PendingIntent =
++            PendingIntent.getBroadcast(
++                context, reqCode,
++                Intent(context, RadioWidgetProvider::class.java).apply {
++                    this.action = action
++                    putExtra(EXTRA_STATION, stationIdx)
++                },
++                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
++            )
++
++        private fun updateWidget(context: Context, mgr: AppWidgetManager, widgetId: Int) {
++            val prefs     = context.getSharedPreferences("radio_prefs", Context.MODE_PRIVATE)
++            val isPlaying = prefs.getBoolean("is_playing", false)
++            val stations  = StationRepository.getAllVisible(context)
++
++            // FIX: guard against empty list — was crashing with IndexOutOfBoundsException
++            if (stations.isEmpty()) {
++                val views = RemoteViews(context.packageName, R.layout.widget_radio)
++                views.setTextViewText(R.id.tv_station_name, "Keine Sender")
++                views.setTextViewText(R.id.tv_station_genre, "")
++                SLOT_IDS.forEach { views.setViewVisibility(it, View.INVISIBLE) }
++                views.setViewVisibility(R.id.btn_page_prev, View.INVISIBLE)
++                views.setViewVisibility(R.id.btn_page_next, View.INVISIBLE)
++                views.setOnClickPendingIntent(R.id.btn_manage,
++                    PendingIntent.getActivity(context, 999,
++                        Intent(context, StationManagerActivity::class.java)
++                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
++                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
++                mgr.updateAppWidget(widgetId, views)
++                return
++            }
++
++            val currentIdx = prefs.getInt("current_station", 0).coerceIn(0, stations.size - 1)
++            val station    = stations[currentIdx]
++
++            // FIX: uses shared maxPage() — no more inline duplication
++            val maxPage = maxPage(stations.size)
++            val page    = prefs.getInt("page", currentIdx / PAGE_SIZE).coerceIn(0, maxPage)
++            prefs.edit().putInt("page", page).apply()
++
++            val views = RemoteViews(context.packageName, R.layout.widget_radio)
++
++            views.setTextViewText(R.id.tv_station_name,  station.name)
++            views.setTextViewText(R.id.tv_station_genre, "${station.genre}  ·  ${station.frequency}")
++
++            views.setImageViewResource(R.id.btn_play_pause,
++                if (isPlaying) android.R.drawable.ic_media_pause
++                else android.R.drawable.ic_media_play)
++            views.setOnClickPendingIntent(R.id.btn_play_pause,
++                if (isPlaying) broadcast(context, ACTION_STOP, currentIdx, 100)
++                else           broadcast(context, ACTION_PLAY, currentIdx, 101))
++            views.setOnClickPendingIntent(R.id.btn_next, broadcast(context, ACTION_NEXT, currentIdx, 102))
++            views.setOnClickPendingIntent(R.id.btn_prev, broadcast(context, ACTION_PREV, currentIdx, 103))
++
++            views.setOnClickPendingIntent(R.id.btn_manage,
++                PendingIntent.getActivity(context, 999,
++                    Intent(context, StationManagerActivity::class.java)
++                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
++                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
++
++            views.setViewVisibility(R.id.btn_page_prev, if (page > 0) View.VISIBLE else View.INVISIBLE)
++            views.setViewVisibility(R.id.btn_page_next, if (page < maxPage) View.VISIBLE else View.INVISIBLE)
++            views.setOnClickPendingIntent(R.id.btn_page_prev, broadcast(context, ACTION_PAGE_PREV, 0, 200))
++            views.setOnClickPendingIntent(R.id.btn_page_next, broadcast(context, ACTION_PAGE_NEXT, 0, 201))
++
++            val offset = page * PAGE_SIZE
++            SLOT_IDS.forEachIndexed { i, viewId ->
++                val idx = offset + i
++                if (idx < stations.size) {
++                    views.setViewVisibility(viewId, View.VISIBLE)
++                    views.setTextViewText(viewId, stations[idx].shortName)
++                    views.setOnClickPendingIntent(viewId, broadcast(context, ACTION_PLAY, idx, 300 + idx))
++                    views.setInt(viewId, "setBackgroundResource",
++                        if (idx == currentIdx && isPlaying) R.drawable.btn_station_active
++                        else R.drawable.btn_station_normal)
++                } else {
++                    views.setViewVisibility(viewId, View.INVISIBLE)
++                }
++            }
++
++            mgr.updateAppWidget(widgetId, views)
+         }
+     }
+ 
+@@ -38,7 +127,7 @@ class RadioWidgetProvider : AppWidgetProvider() {
+ 
+     override fun onReceive(context: Context, intent: Intent) {
+         super.onReceive(context, intent)
+-        val prefs = context.getSharedPreferences("radio_prefs", Context.MODE_PRIVATE)
++        val prefs    = context.getSharedPreferences("radio_prefs", Context.MODE_PRIVATE)
+         val stations = StationRepository.getAllVisible(context)
+ 
+         when (intent.action) {
+@@ -58,9 +147,11 @@ class RadioWidgetProvider : AppWidgetProvider() {
+                 Intent(context, RadioService::class.java).apply { action = ACTION_PREV }
+             )
+             ACTION_PAGE_NEXT -> {
+-                val pages = ((stations.size - 1) / PAGE_SIZE)
+-                val cur   = prefs.getInt("page", 0)
+-                prefs.edit().putInt("page", (cur + 1).coerceAtMost(pages)).apply()
++                // FIX: guard against empty list; uses shared maxPage()
++                if (stations.isNotEmpty()) {
++                    val cur = prefs.getInt("page", 0)
++                    prefs.edit().putInt("page", (cur + 1).coerceAtMost(maxPage(stations.size))).apply()
++                }
+             }
+             ACTION_PAGE_PREV -> {
+                 val cur = prefs.getInt("page", 0)
+@@ -69,76 +160,4 @@ class RadioWidgetProvider : AppWidgetProvider() {
+         }
+         updateAllWidgets(context)
+     }
+-
+-    private fun updateWidget(context: Context, mgr: AppWidgetManager, widgetId: Int) {
+-        val prefs      = context.getSharedPreferences("radio_prefs", Context.MODE_PRIVATE)
+-        val isPlaying  = prefs.getBoolean("is_playing", false)
+-        val stations   = StationRepository.getAllVisible(context)
+-        val currentIdx = prefs.getInt("current_station", 0)
+-            .coerceIn(0, (stations.size - 1).coerceAtLeast(0))
+-        val station    = stations[currentIdx]
+-
+-        // Clamp page if stations were removed
+-        val maxPage = if (stations.isEmpty()) 0 else (stations.size - 1) / PAGE_SIZE
+-        val page    = prefs.getInt("page", currentIdx / PAGE_SIZE).coerceIn(0, maxPage)
+-        prefs.edit().putInt("page", page).apply()
+-
+-        val views = RemoteViews(context.packageName, R.layout.widget_radio)
+-
+-        // Info
+-        views.setTextViewText(R.id.tv_station_name,  station.name)
+-        views.setTextViewText(R.id.tv_station_genre, "${station.genre}  ·  ${station.frequency}")
+-        // freq merged into genre line
+-
+-        // Play/Pause
+-        views.setImageViewResource(R.id.btn_play_pause,
+-            if (isPlaying) android.R.drawable.ic_media_pause
+-            else android.R.drawable.ic_media_play)
+-        views.setOnClickPendingIntent(R.id.btn_play_pause,
+-            if (isPlaying) broadcast(context, ACTION_STOP, currentIdx, 100)
+-            else           broadcast(context, ACTION_PLAY, currentIdx, 101))
+-        views.setOnClickPendingIntent(R.id.btn_next, broadcast(context, ACTION_NEXT, currentIdx, 102))
+-        views.setOnClickPendingIntent(R.id.btn_prev, broadcast(context, ACTION_PREV, currentIdx, 103))
+-
+-        // Manage button
+-        views.setOnClickPendingIntent(R.id.btn_manage,
+-            PendingIntent.getActivity(context, 999,
+-                Intent(context, StationManagerActivity::class.java)
+-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+-
+-        // Page arrows
+-        views.setViewVisibility(R.id.btn_page_prev, if (page > 0) View.VISIBLE else View.INVISIBLE)
+-        views.setViewVisibility(R.id.btn_page_next, if (page < maxPage) View.VISIBLE else View.INVISIBLE)
+-        views.setOnClickPendingIntent(R.id.btn_page_prev, broadcast(context, ACTION_PAGE_PREV, 0, 200))
+-        views.setOnClickPendingIntent(R.id.btn_page_next, broadcast(context, ACTION_PAGE_NEXT, 0, 201))
+-
+-        // 5 station slots for current page
+-        val offset = page * PAGE_SIZE
+-        SLOT_IDS.forEachIndexed { i, viewId ->
+-            val idx = offset + i
+-            if (idx < stations.size) {
+-                views.setViewVisibility(viewId, View.VISIBLE)
+-                views.setTextViewText(viewId, stations[idx].shortName)
+-                views.setOnClickPendingIntent(viewId, broadcast(context, ACTION_PLAY, idx, 300 + idx))
+-                views.setInt(viewId, "setBackgroundResource",
+-                    if (idx == currentIdx && isPlaying) R.drawable.btn_station_active
+-                    else R.drawable.btn_station_normal)
+-            } else {
+-                views.setViewVisibility(viewId, View.INVISIBLE)
+-            }
+-        }
+-
+-        mgr.updateAppWidget(widgetId, views)
+-    }
+-
+-    private fun broadcast(context: Context, action: String, stationIdx: Int, reqCode: Int): PendingIntent =
+-        PendingIntent.getBroadcast(
+-            context, reqCode,
+-            Intent(context, RadioWidgetProvider::class.java).apply {
+-                this.action = action
+-                putExtra(EXTRA_STATION, stationIdx)
+-            },
+-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+-        )
+ }
+diff --git a/RadioWidget/app/src/main/java/de/radiowidget/StationManagerActivity.kt b/RadioWidget/app/src/main/java/de/radiowidget/StationManagerActivity.kt
+index 135ab9c..b7d311e 100644
+--- a/RadioWidget/app/src/main/java/de/radiowidget/StationManagerActivity.kt
++++ b/RadioWidget/app/src/main/java/de/radiowidget/StationManagerActivity.kt
+@@ -1,7 +1,6 @@
+ package de.radiowidget
+ 
+ import android.content.Context
+-import android.content.Intent
+ import android.graphics.Canvas
+ import android.os.Bundle
+ import android.view.LayoutInflater
+@@ -11,28 +10,29 @@ import android.view.ViewGroup
+ import android.widget.*
+ import androidx.appcompat.app.AlertDialog
+ import androidx.appcompat.app.AppCompatActivity
++import androidx.lifecycle.lifecycleScope
+ import androidx.recyclerview.widget.DividerItemDecoration
+ import androidx.recyclerview.widget.ItemTouchHelper
+ import androidx.recyclerview.widget.LinearLayoutManager
+ import androidx.recyclerview.widget.RecyclerView
+-import kotlinx.coroutines.*
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.withContext
+ 
+ class StationManagerActivity : AppCompatActivity() {
+ 
+-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
++    // FIX: lifecycleScope replaces manual CoroutineScope — automatically cancelled on destroy
++    // (remove: private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob()))
+ 
+-    // Tabs
+     private lateinit var tabMy: TextView
+     private lateinit var tabSearch: TextView
+     private lateinit var panelMy: LinearLayout
+     private lateinit var panelSearch: LinearLayout
+ 
+-    // My stations – RecyclerView with drag support
+     private lateinit var recycler: RecyclerView
+     private lateinit var stationAdapter: StationAdapter
+     private val myStations = mutableListOf<RadioStation>()
+ 
+-    // Search
+     private lateinit var searchInput: EditText
+     private lateinit var btnSearch: Button
+     private lateinit var searchProgress: ProgressBar
+@@ -40,7 +40,6 @@ class StationManagerActivity : AppCompatActivity() {
+     private lateinit var searchAdapter: ArrayAdapter<String>
+     private val searchResults = mutableListOf<SearchResult>()
+ 
+-    // ItemTouchHelper for drag-and-drop
+     private lateinit var itemTouchHelper: ItemTouchHelper
+ 
+     override fun onCreate(savedInstanceState: Bundle?) {
+@@ -66,17 +65,23 @@ class StationManagerActivity : AppCompatActivity() {
+     }
+ 
+     private fun setupRecycler() {
+-        stationAdapter = StationAdapter(myStations,
++        stationAdapter = StationAdapter(
++            myStations,
+             onDragStart = { vh -> itemTouchHelper.startDrag(vh) },
+             onDelete    = { pos ->
+-                val s = myStations[pos]
++                // FIX: capture the station object now; re-find by reference after dialog confirm
++                // to handle any reordering between click and confirm
++                val station = myStations.getOrNull(pos) ?: return@StationAdapter
+                 AlertDialog.Builder(this)
+-                    .setTitle(s.name)
++                    .setTitle(station.name)
+                     .setMessage("Sender entfernen?")
+                     .setPositiveButton("Entfernen") { _, _ ->
+-                        myStations.removeAt(pos)
+-                        stationAdapter.notifyItemRemoved(pos)
+-                        persist()
++                        val actualPos = myStations.indexOf(station)
++                        if (actualPos >= 0) {
++                            myStations.removeAt(actualPos)
++                            stationAdapter.notifyItemRemoved(actualPos)
++                            persist()
++                        }
+                     }
+                     .setNegativeButton("Abbrechen", null)
+                     .show()
+@@ -94,8 +99,10 @@ class StationManagerActivity : AppCompatActivity() {
+         ) {
+             override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder,
+                                 target: RecyclerView.ViewHolder): Boolean {
+-                val from = vh.adapterPosition
+-                val to   = target.adapterPosition
++                // FIX: use bindingAdapterPosition (adapterPosition is deprecated)
++                val from = vh.bindingAdapterPosition
++                val to   = target.bindingAdapterPosition
++                if (from == RecyclerView.NO_ID || to == RecyclerView.NO_ID) return false
+                 myStations.add(to, myStations.removeAt(from))
+                 stationAdapter.notifyItemMoved(from, to)
+                 return true
+@@ -103,7 +110,7 @@ class StationManagerActivity : AppCompatActivity() {
+             override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) {}
+             override fun clearView(rv: RecyclerView, vh: RecyclerView.ViewHolder) {
+                 super.clearView(rv, vh)
+-                persist()   // save order after drag ends
++                persist()
+             }
+             override fun onChildDraw(c: Canvas, rv: RecyclerView, vh: RecyclerView.ViewHolder,
+                                      dX: Float, dY: Float, actionState: Int, isActive: Boolean) {
+@@ -185,9 +192,10 @@ class StationManagerActivity : AppCompatActivity() {
+         searchProgress.visibility = View.VISIBLE
+         btnSearch.isEnabled = false
+         searchResults.clear()
+-        searchAdapter.clear()
++        searchAdapter.clear()   // FIX: single clear before launch — was also cleared inside the coroutine
+ 
+-        scope.launch {
++        // FIX: lifecycleScope instead of manual scope.launch
++        lifecycleScope.launch {
+             val results = withContext(Dispatchers.IO) {
+                 runCatching { RadioBrowserApi.searchByName(query) }.getOrElse { emptyList() }
+             }
+@@ -198,18 +206,15 @@ class StationManagerActivity : AppCompatActivity() {
+                 return@launch
+             }
+             searchResults.addAll(results)
+-            searchAdapter.clear()
++            // FIX: removed duplicate searchAdapter.clear() and redundant notifyDataSetChanged()
++            // addAll() calls notifyDataSetChanged() internally
+             searchAdapter.addAll(results.map {
+                 "${it.name}  ${if (it.bitrate > 0) "• ${it.bitrate} kbps" else ""}  ${it.country}"
+             })
+-            searchAdapter.notifyDataSetChanged()
+         }
+     }
+ 
+-    override fun onDestroy() {
+-        scope.cancel()
+-        super.onDestroy()
+-    }
++    // FIX: onDestroy no longer needs scope.cancel() — lifecycleScope handles this automatically
+ }
+ 
+ // ── RecyclerView Adapter with drag handle + delete button ──────────────────
+@@ -245,7 +250,11 @@ class StationAdapter(
+             if (e.actionMasked == MotionEvent.ACTION_DOWN) onDragStart(vh)
+             false
+         }
+-        vh.delete.setOnClickListener { onDelete(vh.adapterPosition) }
++        vh.delete.setOnClickListener {
++            // FIX: guard against NO_POSITION — item may be animating when tapped
++            val pos = vh.bindingAdapterPosition
++            if (pos != RecyclerView.NO_ID) onDelete(pos)
++        }
+     }
+ 
+     override fun getItemCount() = items.size
+diff --git a/RadioWidget/app/src/main/java/de/radiowidget/StationRepository.kt b/RadioWidget/app/src/main/java/de/radiowidget/StationRepository.kt
+index 05eefc4..3232209 100644
+--- a/RadioWidget/app/src/main/java/de/radiowidget/StationRepository.kt
++++ b/RadioWidget/app/src/main/java/de/radiowidget/StationRepository.kt
+@@ -2,6 +2,7 @@ package de.radiowidget
+ 
+ import android.content.Context
+ import org.json.JSONArray
++import org.json.JSONException
+ import org.json.JSONObject
+ 
+ data class RadioStation(
+@@ -64,9 +65,10 @@ object StationRepository {
+             .edit().putString(KEY_ALL, arr.toString()).apply()
+     }
+ 
+-    private fun parseList(json: String): List<RadioStation> {
++    // FIX: wrapped in try-catch — corrupt SharedPreferences JSON no longer crashes the widget
++    private fun parseList(json: String): List<RadioStation> = try {
+         val arr = JSONArray(json)
+-        return (0 until arr.length()).map { i ->
++        (0 until arr.length()).map { i ->
+             val o = arr.getJSONObject(i)
+             RadioStation(
+                 name      = o.getString("name"),
+@@ -77,5 +79,7 @@ object StationRepository {
+                 isCustom  = o.optBoolean("isCustom", false)
+             )
+         }
++    } catch (e: JSONException) {
++        defaults    // FIX: graceful fallback to defaults instead of propagating the crash
+     }
+ }
+diff --git a/RadioWidget/gradle/libs.versions.toml b/RadioWidget/gradle/libs.versions.toml
+index fcf2415..7092e76 100644
+--- a/RadioWidget/gradle/libs.versions.toml
++++ b/RadioWidget/gradle/libs.versions.toml
+@@ -4,13 +4,16 @@ coreKtx     = "1.16.0"
+ appcompat   = "1.7.0"
+ media       = "1.7.0"
+ coroutines  = "1.9.0"
+-recyclerview = "1.3.2"
++recyclerview    = "1.3.2"
++lifecycle       = "2.8.7"
+ 
+ [libraries]
+ androidx-core-ktx    = { group = "androidx.core",              name = "core-ktx",              version.ref = "coreKtx" }
+ androidx-appcompat   = { group = "androidx.appcompat",         name = "appcompat",             version.ref = "appcompat" }
+ androidx-media       = { group = "androidx.media",             name = "media",                 version.ref = "media" }
+ androidx-recyclerview = { group = "androidx.recyclerview",     name = "recyclerview",          version.ref = "recyclerview" }
++# FIX: provides lifecycleScope — replaces manual CoroutineScope in StationManagerActivity
++androidx-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+ kotlinx-coroutines   = { group = "org.jetbrains.kotlinx",     name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+ 
+ [plugins]

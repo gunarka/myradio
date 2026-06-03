@@ -2,6 +2,7 @@ package de.radiowidget
 
 import android.content.Context
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 
 data class RadioStation(
@@ -64,9 +65,10 @@ object StationRepository {
             .edit().putString(KEY_ALL, arr.toString()).apply()
     }
 
-    private fun parseList(json: String): List<RadioStation> {
+    // FIX: wrapped in try-catch — corrupt SharedPreferences JSON no longer crashes the widget
+    private fun parseList(json: String): List<RadioStation> = try {
         val arr = JSONArray(json)
-        return (0 until arr.length()).map { i ->
+        (0 until arr.length()).map { i ->
             val o = arr.getJSONObject(i)
             RadioStation(
                 name      = o.getString("name"),
@@ -77,5 +79,7 @@ object StationRepository {
                 isCustom  = o.optBoolean("isCustom", false)
             )
         }
+    } catch (e: JSONException) {
+        defaults    // FIX: graceful fallback to defaults instead of propagating the crash
     }
 }

@@ -41,6 +41,9 @@
                 <action android:name="de.radiowidget.ACTION_STOP"/>
                 <action android:name="de.radiowidget.ACTION_NEXT"/>
                 <action android:name="de.radiowidget.ACTION_PREV"/>
+                <!-- FIX: were missing — required for page navigation from the widget -->
+                <action android:name="de.radiowidget.ACTION_PAGE_NEXT"/>
+                <action android:name="de.radiowidget.ACTION_PAGE_PREV"/>
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

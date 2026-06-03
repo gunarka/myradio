@@ -4,13 +4,16 @@ coreKtx     = "1.16.0"
 appcompat   = "1.7.0"
 media       = "1.7.0"
 coroutines  = "1.9.0"
-recyclerview = "1.3.2"
+recyclerview    = "1.3.2"
+lifecycle       = "2.8.7"
 
 [libraries]
 androidx-core-ktx    = { group = "androidx.core",              name = "core-ktx",              version.ref = "coreKtx" }
 androidx-appcompat   = { group = "androidx.appcompat",         name = "appcompat",             version.ref = "appcompat" }
 androidx-media       = { group = "androidx.media",             name = "media",                 version.ref = "media" }
 androidx-recyclerview = { group = "androidx.recyclerview",     name = "recyclerview",          version.ref = "recyclerview" }
+# FIX: provides lifecycleScope — replaces manual CoroutineScope in StationManagerActivity
+androidx-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 kotlinx-coroutines   = { group = "org.jetbrains.kotlinx",     name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
 [plugins]

@@ -1,7 +1,6 @@
 package de.radiowidget
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.Canvas
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,28 +10,29 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class StationManagerActivity : AppCompatActivity() {
 
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    // FIX: lifecycleScope replaces manual CoroutineScope — automatically cancelled on destroy
+    // (remove: private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob()))
 
-    // Tabs
     private lateinit var tabMy: TextView
     private lateinit var tabSearch: TextView
     private lateinit var panelMy: LinearLayout
     private lateinit var panelSearch: LinearLayout
 
-    // My stations – RecyclerView with drag support
     private lateinit var recycler: RecyclerView
     private lateinit var stationAdapter: StationAdapter
     private val myStations = mutableListOf<RadioStation>()
 
-    // Search
     private lateinit var searchInput: EditText
     private lateinit var btnSearch: Button
     private lateinit var searchProgress: ProgressBar
@@ -40,7 +40,6 @@ class StationManagerActivity : AppCompatActivity() {
     private lateinit var searchAdapter: ArrayAdapter<String>
     private val searchResults = mutableListOf<SearchResult>()
 
-    // ItemTouchHelper for drag-and-drop
     private lateinit var itemTouchHelper: ItemTouchHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,17 +65,23 @@ class StationManagerActivity : AppCompatActivity() {
     }
 
     private fun setupRecycler() {
-        stationAdapter = StationAdapter(myStations,
+        stationAdapter = StationAdapter(
+            myStations,
             onDragStart = { vh -> itemTouchHelper.startDrag(vh) },
             onDelete    = { pos ->
-                val s = myStations[pos]
+                // FIX: capture the station object now; re-find by reference after dialog confirm
+                // to handle any reordering between click and confirm
+                val station = myStations.getOrNull(pos) ?: return@StationAdapter
                 AlertDialog.Builder(this)
-                    .setTitle(s.name)
+                    .setTitle(station.name)
                     .setMessage("Sender entfernen?")
                     .setPositiveButton("Entfernen") { _, _ ->
-                        myStations.removeAt(pos)
-                        stationAdapter.notifyItemRemoved(pos)
-                        persist()
+                        val actualPos = myStations.indexOf(station)
+                        if (actualPos >= 0) {
+                            myStations.removeAt(actualPos)
+                            stationAdapter.notifyItemRemoved(actualPos)
+                            persist()
+                        }
                     }
                     .setNegativeButton("Abbrechen", null)
                     .show()
@@ -94,8 +99,10 @@ class StationManagerActivity : AppCompatActivity() {
         ) {
             override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder,
                                 target: RecyclerView.ViewHolder): Boolean {
-                val from = vh.adapterPosition
-                val to   = target.adapterPosition
+                // FIX: use bindingAdapterPosition (adapterPosition is deprecated)
+                val from = vh.bindingAdapterPosition
+                val to   = target.bindingAdapterPosition
+                if (from == RecyclerView.NO_ID || to == RecyclerView.NO_ID) return false
                 myStations.add(to, myStations.removeAt(from))
                 stationAdapter.notifyItemMoved(from, to)
                 return true
@@ -103,7 +110,7 @@ class StationManagerActivity : AppCompatActivity() {
             override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) {}
             override fun clearView(rv: RecyclerView, vh: RecyclerView.ViewHolder) {
                 super.clearView(rv, vh)
-                persist()   // save order after drag ends
+                persist()
             }
             override fun onChildDraw(c: Canvas, rv: RecyclerView, vh: RecyclerView.ViewHolder,
                                      dX: Float, dY: Float, actionState: Int, isActive: Boolean) {
@@ -185,9 +192,10 @@ class StationManagerActivity : AppCompatActivity() {
         searchProgress.visibility = View.VISIBLE
         btnSearch.isEnabled = false
         searchResults.clear()
-        searchAdapter.clear()
+        searchAdapter.clear()   // FIX: single clear before launch — was also cleared inside the coroutine
 
-        scope.launch {
+        // FIX: lifecycleScope instead of manual scope.launch
+        lifecycleScope.launch {
             val results = withContext(Dispatchers.IO) {
                 runCatching { RadioBrowserApi.searchByName(query) }.getOrElse { emptyList() }
             }
@@ -198,18 +206,15 @@ class StationManagerActivity : AppCompatActivity() {
                 return@launch
             }
             searchResults.addAll(results)
-            searchAdapter.clear()
+            // FIX: removed duplicate searchAdapter.clear() and redundant notifyDataSetChanged()
+            // addAll() calls notifyDataSetChanged() internally
             searchAdapter.addAll(results.map {
                 "${it.name}  ${if (it.bitrate > 0) "• ${it.bitrate} kbps" else ""}  ${it.country}"
             })
-            searchAdapter.notifyDataSetChanged()
         }
     }
 
-    override fun onDestroy() {
-        scope.cancel()
-        super.onDestroy()
-    }
+    // FIX: onDestroy no longer needs scope.cancel() — lifecycleScope handles this automatically
 }
 
 // ── RecyclerView Adapter with drag handle + delete button ──────────────────
@@ -245,7 +250,11 @@ class StationAdapter(
             if (e.actionMasked == MotionEvent.ACTION_DOWN) onDragStart(vh)
             false
         }
-        vh.delete.setOnClickListener { onDelete(vh.adapterPosition) }
+        vh.delete.setOnClickListener {
+            // FIX: guard against NO_POSITION — item may be animating when tapped
+            val pos = vh.bindingAdapterPosition
+            if (pos != RecyclerView.NO_ID) onDelete(pos)
+        }
     }
 
     override fun getItemCount() = items.size

@@ -32,5 +32,7 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.media)
     implementation(libs.androidx.recyclerview)
+    // FIX: provides lifecycleScope — replaces manual CoroutineScope in StationManagerActivity
+    implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.kotlinx.coroutines)
 }

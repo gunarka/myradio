@@ -3,7 +3,6 @@ package de.radiowidget
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -13,6 +12,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.net.wifi.WifiManager
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -23,11 +23,10 @@ import androidx.core.app.NotificationCompat
 class RadioService : Service() {
 
     companion object {
-        const val CHANNEL_ID      = "radio_channel"
-        const val NOTIFICATION_ID = 1
-        const val RETRY_DELAY_MS  = 5_000L
-        const val MAX_RETRIES     = 10
-        // Watchdog: check every 30s if stream is still alive
+        const val CHANNEL_ID           = "radio_channel"
+        const val NOTIFICATION_ID      = 1
+        const val RETRY_DELAY_MS       = 5_000L
+        const val MAX_RETRIES          = 10
         const val WATCHDOG_INTERVAL_MS = 30_000L
     }
 
@@ -35,6 +34,8 @@ class RadioService : Service() {
     private var currentStationIdx = 0
     private var isPlaying = false
     private var retryCount = 0
+    // FIX: tracks intentional pause from audio focus loss — prevents watchdog false-restart
+    private var isPausedForFocus = false
 
     private lateinit var wakeLock: PowerManager.WakeLock
     private lateinit var wifiLock: WifiManager.WifiLock
@@ -43,7 +44,6 @@ class RadioService : Service() {
 
     private val handler = Handler(Looper.getMainLooper())
 
-    // Retry runnable
     private val retryRunnable = Runnable {
         if (retryCount < MAX_RETRIES) {
             retryCount++
@@ -57,14 +57,13 @@ class RadioService : Service() {
         }
     }
 
-    // Watchdog: Samsung can freeze MediaPlayer without firing onError/onCompletion
     private val watchdogRunnable = object : Runnable {
         override fun run() {
             val mp = mediaPlayer
             if (isPlaying) {
                 val alive = try { mp != null && mp.isPlaying } catch (e: Exception) { false }
-                if (!alive && retryCount == 0) {
-                    // Stream silently died — restart immediately
+                // FIX: isPausedForFocus guard — watchdog no longer restarts an intentional pause
+                if (!alive && retryCount == 0 && !isPausedForFocus) {
                     retryCount = 1
                     val stations = StationRepository.getAllVisible(this@RadioService)
                     startStream(stations[currentStationIdx.coerceIn(0, stations.size - 1)])
@@ -74,10 +73,10 @@ class RadioService : Service() {
         }
     }
 
-    // SCREEN_ON receiver: resume immediately when screen turns on
     private val screenOnReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_SCREEN_ON && isPlaying) {
+            // FIX: also check isPausedForFocus to avoid restarting a focus-paused stream
+            if (intent.action == Intent.ACTION_SCREEN_ON && isPlaying && !isPausedForFocus) {
                 val mp = mediaPlayer
                 val alive = try { mp != null && mp.isPlaying } catch (e: Exception) { false }
                 if (!alive) {
@@ -117,15 +116,40 @@ class RadioService : Service() {
             )
             .setOnAudioFocusChangeListener { focusChange ->
                 when (focusChange) {
-                    AudioManager.AUDIOFOCUS_LOSS            -> stopRadio()
-                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT  -> mediaPlayer?.pause()
-                    AudioManager.AUDIOFOCUS_GAIN            -> mediaPlayer?.start()
+                    AudioManager.AUDIOFOCUS_LOSS -> stopRadio()
+
+                    // FIX: set flag so watchdog and screenOnReceiver don't restart the paused stream
+                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                        mediaPlayer?.pause()
+                        isPausedForFocus = true
+                        saveState(currentStationIdx, playing = false)
+                        RadioWidgetProvider.updateAllWidgets(this)
+                    }
+
+                    // FIX: only resume if we were the ones who paused for focus
+                    AudioManager.AUDIOFOCUS_GAIN -> {
+                        if (isPausedForFocus) {
+                            mediaPlayer?.start()
+                            isPausedForFocus = false
+                            saveState(currentStationIdx, playing = true)
+                            RadioWidgetProvider.updateAllWidgets(this)
+                        }
+                    }
                 }
             }
             .build()
 
-        // Register SCREEN_ON receiver
-        registerReceiver(screenOnReceiver, IntentFilter(Intent.ACTION_SCREEN_ON))
+        // FIX: pass RECEIVER_NOT_EXPORTED on API 33+ — avoids SecurityException on API 34 targets
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(
+                screenOnReceiver,
+                IntentFilter(Intent.ACTION_SCREEN_ON),
+                RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(screenOnReceiver, IntentFilter(Intent.ACTION_SCREEN_ON))
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -138,7 +162,6 @@ class RadioService : Service() {
             RadioWidgetProvider.ACTION_STOP -> { stopRadio(); stopSelf() }
             RadioWidgetProvider.ACTION_NEXT -> playStation((currentStationIdx + 1) % stations.size)
             RadioWidgetProvider.ACTION_PREV -> playStation((currentStationIdx - 1 + stations.size) % stations.size)
-            // Called when service is restarted by system after being killed
             null -> {
                 val prefs = getSharedPreferences("radio_prefs", MODE_PRIVATE)
                 if (prefs.getBoolean("is_playing", false)) {
@@ -151,6 +174,7 @@ class RadioService : Service() {
 
     private fun playStation(idx: Int) {
         retryCount = 0
+        isPausedForFocus = false
         handler.removeCallbacks(retryRunnable)
         handler.removeCallbacks(watchdogRunnable)
 
@@ -195,36 +219,27 @@ class RadioService : Service() {
                 retryCount = 0
                 saveState(currentStationIdx, playing = true)
                 RadioWidgetProvider.updateAllWidgets(this@RadioService)
-                // Start watchdog after stream is confirmed running
                 handler.postDelayed(watchdogRunnable, WATCHDOG_INTERVAL_MS)
             }
 
-            setOnErrorListener { _, _, _ ->
-                handler.removeCallbacks(watchdogRunnable)
-                if (retryCount < MAX_RETRIES) {
-                    handler.postDelayed(retryRunnable, RETRY_DELAY_MS)
-                } else {
-                    this@RadioService.isPlaying = false
-                    saveState(currentStationIdx, playing = false)
-                    RadioWidgetProvider.updateAllWidgets(this@RadioService)
-                    releaseLocks()
-                }
-                true
-            }
-
-            setOnCompletionListener {
-                handler.removeCallbacks(watchdogRunnable)
-                if (retryCount < MAX_RETRIES) {
-                    handler.postDelayed(retryRunnable, RETRY_DELAY_MS)
-                } else {
-                    this@RadioService.isPlaying = false
-                    saveState(currentStationIdx, playing = false)
-                    RadioWidgetProvider.updateAllWidgets(this@RadioService)
-                    releaseLocks()
-                }
-            }
+            // FIX: both error and completion now delegate to shared handleStreamEnd()
+            setOnErrorListener { _, _, _ -> handleStreamEnd(); true }
+            setOnCompletionListener { handleStreamEnd() }
 
             prepareAsync()
+        }
+    }
+
+    // FIX: extracted from duplicate blocks in setOnErrorListener and setOnCompletionListener
+    private fun handleStreamEnd() {
+        handler.removeCallbacks(watchdogRunnable)
+        if (retryCount < MAX_RETRIES) {
+            handler.postDelayed(retryRunnable, RETRY_DELAY_MS)
+        } else {
+            isPlaying = false
+            saveState(currentStationIdx, playing = false)
+            RadioWidgetProvider.updateAllWidgets(this)
+            releaseLocks()
         }
     }
 
@@ -233,6 +248,7 @@ class RadioService : Service() {
         handler.removeCallbacks(watchdogRunnable)
         releasePlayer()
         isPlaying = false
+        isPausedForFocus = false
         saveState(currentStationIdx, playing = false)
         audioManager.abandonAudioFocusRequest(audioFocusRequest)
         releaseLocks()
@@ -263,26 +279,28 @@ class RadioService : Service() {
     }
 
     private fun buildNotification(station: RadioStation): Notification {
-        fun broadcast(action: String, req: Int) = PendingIntent.getBroadcast(
-            this, req,
-            Intent(this, RadioWidgetProvider::class.java).apply { this.action = action },
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+        // FIX: uses RadioWidgetProvider.broadcast() — local duplicate helper removed
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setContentTitle(station.name)
             .setContentText("${station.genre} · ${station.frequency}")
             .setOngoing(true)
             .setSilent(true)
-            .addAction(android.R.drawable.ic_media_previous, "Zurück",  broadcast(RadioWidgetProvider.ACTION_PREV, 2))
-            .addAction(android.R.drawable.ic_media_pause,    "Stop",    broadcast(RadioWidgetProvider.ACTION_STOP, 0))
-            .addAction(android.R.drawable.ic_media_next,     "Weiter",  broadcast(RadioWidgetProvider.ACTION_NEXT, 1))
-            .setStyle(androidx.media.app.NotificationCompat.MediaStyle().setShowActionsInCompactView(0, 1, 2))
+            .addAction(android.R.drawable.ic_media_previous, "Zurück",
+                RadioWidgetProvider.broadcast(this, RadioWidgetProvider.ACTION_PREV, 0, 2))
+            .addAction(android.R.drawable.ic_media_pause, "Stop",
+                RadioWidgetProvider.broadcast(this, RadioWidgetProvider.ACTION_STOP, 0, 0))
+            .addAction(android.R.drawable.ic_media_next, "Weiter",
+                RadioWidgetProvider.broadcast(this, RadioWidgetProvider.ACTION_NEXT, 0, 1))
+            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
+                .setShowActionsInCompactView(0, 1, 2))
             .build()
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(CHANNEL_ID, "Radio Widget", NotificationManager.IMPORTANCE_LOW).apply {
+        val channel = NotificationChannel(
+            CHANNEL_ID, "Radio Widget", NotificationManager.IMPORTANCE_LOW
+        ).apply {
             description = "Streaming Radio Wiedergabe"
             setSound(null, null)
         }
