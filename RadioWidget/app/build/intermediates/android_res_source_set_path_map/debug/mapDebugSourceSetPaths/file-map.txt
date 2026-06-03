@@ -1,0 +1,7 @@
+de.radiowidget.app-pngs-0 /home/gunar/Programme/projects/myradio/RadioWidget/app/build/generated/res/pngs/debug
+de.radiowidget.app-updated_navigation_xml-1 /home/gunar/Programme/projects/myradio/RadioWidget/app/build/generated/updated_navigation_xml/debug
+de.radiowidget.app-packageDebugResources-2 /home/gunar/Programme/projects/myradio/RadioWidget/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+de.radiowidget.app-packageDebugResources-3 /home/gunar/Programme/projects/myradio/RadioWidget/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+de.radiowidget.app-debug-4 /home/gunar/Programme/projects/myradio/RadioWidget/app/build/intermediates/merged_res/debug/mergeDebugResources
+de.radiowidget.app-debug-5 /home/gunar/Programme/projects/myradio/RadioWidget/app/src/debug/res
+de.radiowidget.app-main-6 /home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/res

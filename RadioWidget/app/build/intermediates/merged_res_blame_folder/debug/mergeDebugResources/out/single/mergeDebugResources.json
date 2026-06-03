@@ -1,0 +1,42 @@
+[
+    {
+        "merged": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-debug-29:/xml_radio_widget_info.xml.flat",
+        "source": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-main-31:/xml/radio_widget_info.xml"
+    },
+    {
+        "merged": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-debug-29:/layout_activity_station_manager.xml.flat",
+        "source": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-main-31:/layout/activity_station_manager.xml"
+    },
+    {
+        "merged": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-debug-29:/drawable_widget_background.xml.flat",
+        "source": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-main-31:/drawable/widget_background.xml"
+    },
+    {
+        "merged": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-debug-29:/layout_widget_radio.xml.flat",
+        "source": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-main-31:/layout/widget_radio.xml"
+    },
+    {
+        "merged": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-debug-29:/drawable_btn_ctrl_bg.xml.flat",
+        "source": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-main-31:/drawable/btn_ctrl_bg.xml"
+    },
+    {
+        "merged": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-debug-29:/layout_item_station.xml.flat",
+        "source": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-main-31:/layout/item_station.xml"
+    },
+    {
+        "merged": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-debug-29:/drawable_btn_station_active.xml.flat",
+        "source": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-main-31:/drawable/btn_station_active.xml"
+    },
+    {
+        "merged": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-debug-29:/drawable_btn_station_normal.xml.flat",
+        "source": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-main-31:/drawable/btn_station_normal.xml"
+    },
+    {
+        "merged": "de.radiowidget.app-debug-29:/layout_widget_radio.xml.flat",
+        "source": "de.radiowidget.app-main-31:/layout/widget_radio.xml"
+    },
+    {
+        "merged": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-debug-29:/drawable_btn_play_bg.xml.flat",
+        "source": "/home/gunar/.gradle/daemon/9.4.1/de.radiowidget.app-main-31:/drawable/btn_play_bg.xml"
+    }
+]

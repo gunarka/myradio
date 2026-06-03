@@ -102,7 +102,7 @@ class StationManagerActivity : AppCompatActivity() {
                 // FIX: use bindingAdapterPosition (adapterPosition is deprecated)
                 val from = vh.bindingAdapterPosition
                 val to   = target.bindingAdapterPosition
-                if (from == RecyclerView.NO_ID || to == RecyclerView.NO_ID) return false
+                if (from == RecyclerView.NO_POSITION || to == RecyclerView.NO_POSITION) return false
                 myStations.add(to, myStations.removeAt(from))
                 stationAdapter.notifyItemMoved(from, to)
                 return true
@@ -253,7 +253,7 @@ class StationAdapter(
         vh.delete.setOnClickListener {
             // FIX: guard against NO_POSITION — item may be animating when tapped
             val pos = vh.bindingAdapterPosition
-            if (pos != RecyclerView.NO_ID) onDelete(pos)
+            if (pos != RecyclerView.NO_POSITION) onDelete(pos)
         }
     }
 
