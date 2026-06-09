@@ -55,6 +55,7 @@
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="de.radiowidget.ACTION_PLAY" />
                 <action android:name="de.radiowidget.ACTION_STOP" />
+                <action android:name="de.radiowidget.ACTION_PAUSE" />
                 <action android:name="de.radiowidget.ACTION_NEXT" />
                 <action android:name="de.radiowidget.ACTION_PREV" />
                 <!-- FIX: were missing — required for page navigation from the widget -->

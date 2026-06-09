@@ -12,30 +12,30 @@
 9-->INJECTED
 10
 11    <uses-permission android:name="android.permission.INTERNET" />
-11-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:5:5-66
-11-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:5:22-64
+11-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:4:5-66
+11-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:4:22-64
 12    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-12-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:6:5-76
-12-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:6:22-74
+12-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:5:5-76
+12-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:5:22-74
 13    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-13-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:7:5-91
-13-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:7:22-89
+13-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:6:5-91
+13-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:6:22-89
 14    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-14-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:8:5-76
-14-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:8:22-74
+14-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:7:5-76
+14-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:7:22-74
 15    <uses-permission android:name="android.permission.WAKE_LOCK" />
-15-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:9:5-67
-15-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:9:22-65
+15-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:8:5-67
+15-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:8:22-65
 16    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-16-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:10:5-75
-16-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:10:22-73
+16-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:9:5-75
+16-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:9:22-73
 17    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-17-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:11:5-75
-17-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:11:22-73
+17-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:10:5-75
+17-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:10:22-73
 18    <!-- Needed to request battery optimization exemption -->
 19    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-19-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:13:5-94
-19-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:13:22-92
+19-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:12:5-94
+19-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:12:22-92
 20
 21    <permission
 21-->[androidx.core:core:1.16.0] /home/gunar/.gradle/caches/9.4.1/transforms/5d7ea9868dd2084ba9be7fc81db58b6a/transformed/core-1.16.0/AndroidManifest.xml:22:5-24:47
@@ -49,162 +49,165 @@
 25-->[androidx.core:core:1.16.0] /home/gunar/.gradle/caches/9.4.1/transforms/5d7ea9868dd2084ba9be7fc81db58b6a/transformed/core-1.16.0/AndroidManifest.xml:26:22-94
 26
 27    <application
-27-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:15:5-60:19
+27-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:14:5-60:19
 28        android:allowBackup="true"
-28-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:16:9-35
+28-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:15:9-35
 29        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 29-->[androidx.core:core:1.16.0] /home/gunar/.gradle/caches/9.4.1/transforms/5d7ea9868dd2084ba9be7fc81db58b6a/transformed/core-1.16.0/AndroidManifest.xml:28:18-86
 30        android:debuggable="true"
 31        android:extractNativeLibs="false"
 31-->INJECTED
 32        android:label="@string/app_name"
-32-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:17:9-41
+32-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:16:9-41
 33        android:supportsRtl="true"
-33-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:18:9-35
+33-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:17:9-35
 34        android:testOnly="true"
 35        android:theme="@style/Theme.RadioWidget" >
-35-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:19:9-49
+35-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:18:9-49
 36
 37        <!-- One-time battery optimization dialog -->
 38        <activity
-38-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:22:9-25:67
+38-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:21:9-24:67
 39            android:name="de.radiowidget.BatteryOptimizationActivity"
-39-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:23:13-56
+39-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:22:13-56
 40            android:exported="false"
-40-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:24:13-37
+40-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:23:13-37
 41            android:theme="@style/Theme.RadioWidget.Transparent" />
-41-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:25:13-65
+41-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:24:13-65
 42
 43        <!-- Station Manager Activity -->
 44        <activity
-44-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:28:9-32:63
+44-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:27:9-31:63
 45            android:name="de.radiowidget.StationManagerActivity"
-45-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:29:13-51
+45-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:28:13-51
 46            android:exported="false"
-46-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:30:13-37
+46-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:29:13-37
 47            android:label="Sender verwalten"
-47-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:31:13-45
+47-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:30:13-45
 48            android:theme="@style/Theme.RadioWidget.Manager" />
-48-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:32:13-61
+48-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:31:13-61
 49
 50        <!-- AppWidget Provider -->
 51        <receiver
-51-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:35:9-51:20
+51-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:34:9-51:20
 52            android:name="de.radiowidget.RadioWidgetProvider"
-52-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:36:13-48
+52-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:35:13-48
 53            android:exported="true" >
-53-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:37:13-36
+53-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:36:13-36
 54            <intent-filter>
-54-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:38:13-47:29
+54-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:37:13-47:29
 55                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-55-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:39:17-83
-55-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:39:25-81
+55-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:38:17-83
+55-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:38:25-81
 56                <action android:name="de.radiowidget.ACTION_PLAY" />
-56-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:40:17-68
-56-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:40:25-66
+56-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:39:17-68
+56-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:39:25-66
 57                <action android:name="de.radiowidget.ACTION_STOP" />
-57-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:41:17-68
-57-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:41:25-66
-58                <action android:name="de.radiowidget.ACTION_NEXT" />
-58-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:42:17-68
-58-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:42:25-66
-59                <action android:name="de.radiowidget.ACTION_PREV" />
-59-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:43:17-68
-59-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:43:25-66
-60                <!-- FIX: were missing — required for page navigation from the widget -->
-61                <action android:name="de.radiowidget.ACTION_PAGE_NEXT" />
-61-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:45:17-73
-61-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:45:25-71
-62                <action android:name="de.radiowidget.ACTION_PAGE_PREV" />
-62-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:46:17-73
-62-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:46:25-71
-63            </intent-filter>
-64
-65            <meta-data
-65-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:48:13-50:60
-66                android:name="android.appwidget.provider"
-66-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:49:17-58
-67                android:resource="@xml/radio_widget_info" />
-67-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:50:17-58
-68        </receiver>
-69
-70        <!-- Foreground Service for streaming -->
-71        <service
-71-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:54:9-58:43
-72            android:name="de.radiowidget.RadioService"
-72-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:55:13-41
-73            android:exported="false"
-73-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:56:13-37
-74            android:foregroundServiceType="mediaPlayback"
-74-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:57:13-58
-75            android:stopWithTask="false" />
-75-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:58:13-41
-76
-77        <provider
-77-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/4bfe752a185857152afe4de484f46f41/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
-78            android:name="androidx.startup.InitializationProvider"
-78-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/4bfe752a185857152afe4de484f46f41/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:25:13-67
-79            android:authorities="de.radiowidget.androidx-startup"
-79-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/4bfe752a185857152afe4de484f46f41/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:26:13-68
-80            android:exported="false" >
-80-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/4bfe752a185857152afe4de484f46f41/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:27:13-37
-81            <meta-data
-81-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/4bfe752a185857152afe4de484f46f41/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
-82                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-82-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/4bfe752a185857152afe4de484f46f41/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:30:17-75
-83                android:value="androidx.startup" />
-83-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/4bfe752a185857152afe4de484f46f41/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:31:17-49
-84            <meta-data
-84-->[androidx.lifecycle:lifecycle-process:2.8.7] /home/gunar/.gradle/caches/9.4.1/transforms/a1fb49abd14ccf62d39ad091465eae9b/transformed/jetified-lifecycle-process-2.8.7/AndroidManifest.xml:29:13-31:52
-85                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-85-->[androidx.lifecycle:lifecycle-process:2.8.7] /home/gunar/.gradle/caches/9.4.1/transforms/a1fb49abd14ccf62d39ad091465eae9b/transformed/jetified-lifecycle-process-2.8.7/AndroidManifest.xml:30:17-78
-86                android:value="androidx.startup" />
-86-->[androidx.lifecycle:lifecycle-process:2.8.7] /home/gunar/.gradle/caches/9.4.1/transforms/a1fb49abd14ccf62d39ad091465eae9b/transformed/jetified-lifecycle-process-2.8.7/AndroidManifest.xml:31:17-49
-87            <meta-data
-87-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
-88                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-88-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
-89                android:value="androidx.startup" />
-89-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
-90        </provider>
-91
-92        <receiver
-92-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
-93            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-93-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
-94            android:directBootAware="false"
-94-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
-95            android:enabled="true"
-95-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
-96            android:exported="true"
-96-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
-97            android:permission="android.permission.DUMP" >
-97-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
-98            <intent-filter>
-98-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
-99                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-99-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
-99-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
-100            </intent-filter>
-101            <intent-filter>
-101-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
-102                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-102-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
-102-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
-103            </intent-filter>
-104            <intent-filter>
-104-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
-105                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-105-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
-105-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
-106            </intent-filter>
-107            <intent-filter>
-107-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
-108                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-108-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
-108-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/71192497c95ef261e3b751433c81cb3e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
-109            </intent-filter>
-110        </receiver>
-111    </application>
-112
-113</manifest>
+57-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:40:17-68
+57-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:40:25-66
+58                <action android:name="de.radiowidget.ACTION_PAUSE" />
+58-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:41:17-69
+58-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:41:25-67
+59                <action android:name="de.radiowidget.ACTION_NEXT" />
+59-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:42:17-68
+59-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:42:25-66
+60                <action android:name="de.radiowidget.ACTION_PREV" />
+60-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:43:17-68
+60-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:43:25-66
+61                <!-- FIX: were missing — required for page navigation from the widget -->
+62                <action android:name="de.radiowidget.ACTION_PAGE_NEXT" />
+62-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:45:17-73
+62-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:45:25-71
+63                <action android:name="de.radiowidget.ACTION_PAGE_PREV" />
+63-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:46:17-73
+63-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:46:25-71
+64            </intent-filter>
+65
+66            <meta-data
+66-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:48:13-50:60
+67                android:name="android.appwidget.provider"
+67-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:49:17-58
+68                android:resource="@xml/radio_widget_info" />
+68-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:50:17-58
+69        </receiver>
+70
+71        <!-- Foreground Service for streaming -->
+72        <service
+72-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:54:9-58:43
+73            android:name="de.radiowidget.RadioService"
+73-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:55:13-41
+74            android:exported="false"
+74-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:56:13-37
+75            android:foregroundServiceType="mediaPlayback"
+75-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:57:13-58
+76            android:stopWithTask="false" />
+76-->/home/gunar/Programme/projects/myradio/RadioWidget/app/src/main/AndroidManifest.xml:58:13-41
+77
+78        <provider
+78-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/2de05b4bf5b69de4c8e317403700abfc/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+79            android:name="androidx.startup.InitializationProvider"
+79-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/2de05b4bf5b69de4c8e317403700abfc/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+80            android:authorities="de.radiowidget.androidx-startup"
+80-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/2de05b4bf5b69de4c8e317403700abfc/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+81            android:exported="false" >
+81-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/2de05b4bf5b69de4c8e317403700abfc/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+82            <meta-data
+82-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/2de05b4bf5b69de4c8e317403700abfc/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+83                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+83-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/2de05b4bf5b69de4c8e317403700abfc/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+84                android:value="androidx.startup" />
+84-->[androidx.emoji2:emoji2:1.3.0] /home/gunar/.gradle/caches/9.4.1/transforms/2de05b4bf5b69de4c8e317403700abfc/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+85            <meta-data
+85-->[androidx.lifecycle:lifecycle-process:2.8.7] /home/gunar/.gradle/caches/9.4.1/transforms/4ca3af0800206b1544d1a1a9ff5963fe/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:29:13-31:52
+86                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+86-->[androidx.lifecycle:lifecycle-process:2.8.7] /home/gunar/.gradle/caches/9.4.1/transforms/4ca3af0800206b1544d1a1a9ff5963fe/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:30:17-78
+87                android:value="androidx.startup" />
+87-->[androidx.lifecycle:lifecycle-process:2.8.7] /home/gunar/.gradle/caches/9.4.1/transforms/4ca3af0800206b1544d1a1a9ff5963fe/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:31:17-49
+88            <meta-data
+88-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+89                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+89-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+90                android:value="androidx.startup" />
+90-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+91        </provider>
+92
+93        <receiver
+93-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+94            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+94-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+95            android:directBootAware="false"
+95-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+96            android:enabled="true"
+96-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+97            android:exported="true"
+97-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+98            android:permission="android.permission.DUMP" >
+98-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+99            <intent-filter>
+99-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+100                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+100-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+100-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+101            </intent-filter>
+102            <intent-filter>
+102-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+103                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+103-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+103-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+104            </intent-filter>
+105            <intent-filter>
+105-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+106                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+106-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+106-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+107            </intent-filter>
+108            <intent-filter>
+108-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+109                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+109-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+109-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/gunar/.gradle/caches/9.4.1/transforms/4b6b344ac437f71d4160de29a9e9616d/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+110            </intent-filter>
+111        </receiver>
+112    </application>
+113
+114</manifest>

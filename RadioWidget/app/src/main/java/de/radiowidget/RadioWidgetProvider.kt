@@ -14,6 +14,7 @@ class RadioWidgetProvider : AppWidgetProvider() {
     companion object {
         const val ACTION_PLAY      = "de.radiowidget.ACTION_PLAY"
         const val ACTION_STOP      = "de.radiowidget.ACTION_STOP"
+        const val ACTION_PAUSE     = "de.radiowidget.ACTION_PAUSE"
         const val ACTION_NEXT      = "de.radiowidget.ACTION_NEXT"
         const val ACTION_PREV      = "de.radiowidget.ACTION_PREV"
         const val ACTION_PAGE_NEXT = "de.radiowidget.ACTION_PAGE_NEXT"
@@ -145,6 +146,10 @@ class RadioWidgetProvider : AppWidgetProvider() {
             )
             ACTION_PREV -> context.startForegroundService(
                 Intent(context, RadioService::class.java).apply { action = ACTION_PREV }
+            )
+            // Pause without stopping the service — service stays in foreground, stream can resume
+            ACTION_PAUSE -> context.startService(
+                Intent(context, RadioService::class.java).apply { action = ACTION_PAUSE }
             )
             ACTION_PAGE_NEXT -> {
                 // FIX: guard against empty list; uses shared maxPage()
