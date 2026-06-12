@@ -124,30 +124,44 @@ class RadioService : Service() {
                 when (focusChange) {
                     AudioManager.AUDIOFOCUS_LOSS -> stopRadio()
 
-                    // set flag so watchdog and screenOnReceiver don't restart the paused stream
+                    // FIX: skip entirely when the user already paused.
+                    // The service keeps audio focus while user-paused (stopRadio() is never
+                    // called), so AUDIOFOCUS_LOSS_TRANSIENT can fire during a call even when
+                    // the stream is not playing.  Setting isPausedForFocus=true in that case
+                    // causes AUDIOFOCUS_GAIN to restart the stream the user deliberately stopped.
                     AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                        mediaPlayer?.pause()
-                        isPausedForFocus = true
-                        saveState(currentStationIdx, playing = false)
-                        updateMediaSession()
-                        RadioWidgetProvider.updateAllWidgets(this)
+                        if (!isUserPaused) {
+                            mediaPlayer?.pause()
+                            isPausedForFocus = true
+                            saveState(currentStationIdx, playing = false)
+                            updateMediaSession()
+                            RadioWidgetProvider.updateAllWidgets(this)
+                        }
+                        // if isUserPaused: player is already paused by the user — nothing to
+                        // pause further, and isPausedForFocus must not be set so that
+                        // AUDIOFOCUS_GAIN never auto-resumes a deliberately stopped stream.
                     }
 
-                    // FIX: only resume if we paused for focus AND we're not in a phone call.
+                    // Resume only when WE paused for focus, the call is fully over, and the
+                    // user has not paused independently.  The !isUserPaused guard is
+                    // belt-and-suspenders: it catches the unlikely edge case where
+                    // isPausedForFocus was set before isUserPaused was raised (e.g. focus
+                    // loss arriving during prepareAsync() before onPrepared fires).
                     // When the ringtone stops (call answered) AUDIOFOCUS_GAIN fires while the
-                    // call is still active — audioManager.mode will be MODE_IN_CALL at that
-                    // point, so we leave isPausedForFocus=true and stay silent.  When the call
+                    // call is still active — audioManager.mode is MODE_IN_CALL at that point,
+                    // so we leave isPausedForFocus=true and stay silent.  When the call
                     // actually ends, telephony releases focus and fires AUDIOFOCUS_GAIN again;
                     // by then mode is back to MODE_NORMAL and we resume correctly.
                     AudioManager.AUDIOFOCUS_GAIN -> {
-                        if (isPausedForFocus && !isInCall()) {
+                        if (isPausedForFocus && !isInCall() && !isUserPaused) {
                             mediaPlayer?.start()
                             isPausedForFocus = false
                             saveState(currentStationIdx, playing = true)
                             updateMediaSession()
                             RadioWidgetProvider.updateAllWidgets(this)
                         }
-                        // if isInCall(): isPausedForFocus stays true — watchdog silent, stream stays paused
+                        // if isInCall():   isPausedForFocus stays true — watchdog stays silent
+                        // if isUserPaused: user deliberately paused — never auto-resume
                     }
                 }
             }
