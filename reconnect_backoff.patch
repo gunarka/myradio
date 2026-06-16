@@ -1,0 +1,61 @@
+diff --git a/RadioWidget/app/src/main/java/de/radiowidget/RadioService.kt b/RadioWidget/app/src/main/java/de/radiowidget/RadioService.kt
+index ba561a3..254439e 100644
+--- a/RadioWidget/app/src/main/java/de/radiowidget/RadioService.kt
++++ b/RadioWidget/app/src/main/java/de/radiowidget/RadioService.kt
+@@ -17,6 +17,7 @@ import android.os.Handler
+ import android.os.IBinder
+ import android.os.Looper
+ import android.os.PowerManager
++import android.util.Log
+ import android.app.Service
+ import android.support.v4.media.MediaMetadataCompat
+ import android.support.v4.media.session.MediaSessionCompat
+@@ -28,9 +29,13 @@ class RadioService : Service() {
+     companion object {
+         const val CHANNEL_ID           = "radio_channel"
+         const val NOTIFICATION_ID      = 1
+-        const val RETRY_DELAY_MS       = 5_000L
+         const val MAX_RETRIES          = 10
+         const val WATCHDOG_INTERVAL_MS = 30_000L
++        // FIX: erster Wiederverbindungsversuch sofort (0ms) statt fixer 5s-Wartezeit bei
++        // jedem Abbruch — kurze Netz-Hänger reconnecten so binnen ~1s statt ~6s. Spätere
++        // Versuche bekommen steigende Pausen, gedeckelt bei 5s, um einen echten Ausfall
++        // nicht mit Verbindungsversuchen zu fluten.
++        val RETRY_DELAYS_MS = longArrayOf(0L, 1_000L, 2_000L, 3_000L, 5_000L)
+     }
+ 
+     private var mediaPlayer: MediaPlayer? = null
+@@ -264,9 +269,17 @@ class RadioService : Service() {
+                 handler.postDelayed(watchdogRunnable, WATCHDOG_INTERVAL_MS)
+             }
+ 
+-            // FIX: both error and completion now delegate to shared handleStreamEnd()
+-            setOnErrorListener { _, _, _ -> handleStreamEnd(); true }
+-            setOnCompletionListener { handleStreamEnd() }
++            // FIX: log the real error/extra codes so logcat reveals whether drops are
++            // network-side (e.g. MEDIA_ERROR_IO) or something else — previously discarded
++            setOnErrorListener { _, what, extra ->
++                Log.w("RadioService", "Stream-Fehler what=$what extra=$extra (${station.name})")
++                handleStreamEnd()
++                true
++            }
++            setOnCompletionListener {
++                Log.w("RadioService", "Stream completion ohne Fehlercode (${station.name})")
++                handleStreamEnd()
++            }
+ 
+             prepareAsync()
+         }
+@@ -276,7 +289,11 @@ class RadioService : Service() {
+     private fun handleStreamEnd() {
+         handler.removeCallbacks(watchdogRunnable)
+         if (retryCount < MAX_RETRIES) {
+-            handler.postDelayed(retryRunnable, RETRY_DELAY_MS)
++            // FIX: escalating delay (0s, 1s, 2s, 3s, 5s-capped) instead of a flat 5s wait
++            // on every attempt — first reconnect after a brief network blip now happens
++            // almost immediately instead of guaranteeing ~6s of silence.
++            val delay = RETRY_DELAYS_MS.getOrElse(retryCount) { RETRY_DELAYS_MS.last() }
++            handler.postDelayed(retryRunnable, delay)
+         } else {
+             isPlaying = false
+             saveState(currentStationIdx, playing = false)
