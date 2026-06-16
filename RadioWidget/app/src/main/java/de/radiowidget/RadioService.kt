@@ -255,6 +255,13 @@ class RadioService : Service() {
         if (!wifiLock.isHeld) wifiLock.acquire()
 
         startForeground(NOTIFICATION_ID, buildNotification(station, true))
+        // FIX: refresh MediaSession metadata right away on station switch. The lock-screen
+        // control reads title/artist from the MediaSession (not from the Notification text),
+        // and previously this was only refreshed once playback actually started in onPrepared()
+        // (delayed by buffering) or whenever Pause/Play ran updateMediaSession() as a side
+        // effect — so Next/Prev (incl. the lock-screen skip buttons themselves) left the old
+        // station name showing until the next Pause.
+        updateMediaSession()
         startStream(station)
         RadioWidgetProvider.updateAllWidgets(this)
     }
